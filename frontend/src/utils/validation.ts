@@ -1,6 +1,7 @@
 import type { OperationType, ValidationResult } from '../types/calculator';
 
 const NUMERIC_PATTERN = /^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/;
+const PERCENTAGE_DIVISOR = 100;
 
 export function normalizeZero(value: number): number {
   return value === 0 ? 0 : value;
@@ -143,6 +144,20 @@ export function validateBinaryOperation(
     }
     const previewPow = Math.pow(operandA, operandB);
     if (!Number.isFinite(previewPow)) {
+      return {
+        isValid: false,
+        errorMessage: 'Arithmetic result overflowed maximum float64 bounds',
+      };
+    }
+  }
+
+  if (operation === 'percentage') {
+    const directProduct = operandA * operandB;
+    const previewPct = Number.isFinite(directProduct)
+      ? directProduct / PERCENTAGE_DIVISOR
+      : (operandA / PERCENTAGE_DIVISOR) * operandB;
+
+    if (!Number.isFinite(previewPct)) {
       return {
         isValid: false,
         errorMessage: 'Arithmetic result overflowed maximum float64 bounds',

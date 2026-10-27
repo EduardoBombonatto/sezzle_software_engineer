@@ -5,6 +5,11 @@ import (
 	"math"
 )
 
+const (
+	// PercentageDivisor is the standard scale factor used to compute a percentage of a value.
+	PercentageDivisor = 100.0
+)
+
 var (
 	// ErrInvalidOperand indicates that one or more input operands are NaN or Infinite.
 	ErrInvalidOperand = errors.New("operands must be finite numbers")
@@ -33,6 +38,7 @@ type Calculator interface {
 	Divide(operandA, operandB float64) (float64, error)
 	Power(base, exponent float64) (float64, error)
 	Sqrt(operand float64) (float64, error)
+	Percentage(percent, baseValue float64) (float64, error)
 }
 
 // Service implements the Calculator domain logic with O(1) time and O(1) space complexity.
@@ -118,6 +124,22 @@ func (s *Service) Sqrt(operand float64) (float64, error) {
 	}
 
 	return finalizeResult(math.Sqrt(operand))
+}
+
+// Percentage computes `percent`% of `baseValue` ((percent * baseValue) / 100).
+// If direct multiplication overflows float64, it scales the larger magnitude operand
+// by PercentageDivisor first to prevent spurious intermediate overflow.
+func (s *Service) Percentage(percent, baseValue float64) (float64, error) {
+	if err := validateFiniteOperands(percent, baseValue); err != nil {
+		return 0, err
+	}
+
+	product := percent * baseValue
+	if !math.IsInf(product, 0) {
+		return finalizeResult(product / PercentageDivisor)
+	}
+
+	return finalizeResult((percent / PercentageDivisor) * baseValue)
 }
 
 func validateFiniteOperands(operands ...float64) error {

@@ -3,6 +3,7 @@ import {
   calculateAddition,
   calculateDivision,
   calculateMultiplication,
+  calculatePercentage,
   calculatePower,
   calculateSquareRoot,
   calculateSubtraction,
@@ -31,6 +32,7 @@ const OPERATION_SYMBOLS: Record<OperationType, string> = {
   divide: '÷',
   power: '^',
   sqrt: '√',
+  percentage: '% of',
 };
 
 const BINARY_OPERATION_EXECUTORS: Record<
@@ -42,6 +44,7 @@ const BINARY_OPERATION_EXECUTORS: Record<
   multiply: calculateMultiplication,
   divide: calculateDivision,
   power: calculatePower,
+  percentage: calculatePercentage,
 };
 
 export function useCalculator() {

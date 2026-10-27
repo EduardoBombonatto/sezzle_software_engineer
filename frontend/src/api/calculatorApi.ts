@@ -128,3 +128,14 @@ export async function calculateSquareRoot(
     a: normalizeZero(operand),
   });
 }
+
+export async function calculatePercentage(
+  percent: number,
+  baseValue: number
+): Promise<CalculationResponseData> {
+  assertFiniteNumbers(percent, baseValue);
+  return postCalculation('/calculate/percentage', {
+    a: normalizeZero(percent),
+    b: normalizeZero(baseValue),
+  });
+}

@@ -749,3 +749,92 @@ func TestSqrtEndpoint(t *testing.T) {
 		})
 	}
 }
+
+func TestPercentageEndpoint(t *testing.T) {
+	t.Parallel()
+
+	router := newTestServer()
+
+	testCases := []struct {
+		name              string
+		method            string
+		contentType       string
+		body              string
+		expectedStatus    int
+		expectedErrorFlag bool
+		expectedResult    float64
+		expectedMsgSubstr string
+	}{
+		{
+			name:              "valid percentage calculation 15 percent of 200",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{"a": 15, "b": 200}`,
+			expectedStatus:    http.StatusOK,
+			expectedErrorFlag: false,
+			expectedResult:    30.0,
+		},
+		{
+			name:              "valid percentage with 50 percent of MaxFloat64 without intermediate overflow",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{"a": 50, "b": 1.7976931348623157e+308}`,
+			expectedStatus:    http.StatusOK,
+			expectedErrorFlag: false,
+			expectedResult:    math.MaxFloat64 * 0.5,
+		},
+		{
+			name:              "degenerate single operand missing b",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{"a": 15}`,
+			expectedStatus:    http.StatusBadRequest,
+			expectedErrorFlag: true,
+			expectedMsgSubstr: "Both operands 'a' and 'b' are required",
+		},
+		{
+			name:              "extreme percentage overflow rejected with 422",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{"a": 200, "b": 1.7976931348623157e+308}`,
+			expectedStatus:    http.StatusUnprocessableEntity,
+			expectedErrorFlag: true,
+			expectedMsgSubstr: "overflow",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := httptest.NewRequest(tc.method, "/api/v1/calculate/percentage", bytes.NewBufferString(tc.body))
+			if tc.contentType != "" {
+				req.Header.Set("Content-Type", tc.contentType)
+			}
+			rec := httptest.NewRecorder()
+
+			router.ServeHTTP(rec, req)
+
+			env := assertStandardEnvelope(t, rec, tc.expectedStatus, tc.expectedErrorFlag)
+
+			if tc.expectedErrorFlag {
+				if !strings.Contains(strings.ToLower(env.Message), strings.ToLower(tc.expectedMsgSubstr)) {
+					t.Fatalf("expected error message containing %q, got %q", tc.expectedMsgSubstr, env.Message)
+				}
+				return
+			}
+
+			gotResult, ok := env.Data["result"].(float64)
+			if !ok {
+				t.Fatalf("expected numeric result in data, got %v", env.Data["result"])
+			}
+			if math.Abs(gotResult-tc.expectedResult) > 1e-9 && gotResult != tc.expectedResult {
+				t.Fatalf("expected result %v, got %v", tc.expectedResult, gotResult)
+			}
+			if env.Data["operation"] != "percentage" {
+				t.Fatalf("expected operation 'percentage', got %v", env.Data["operation"])
+			}
+		})
+	}
+}

@@ -3,6 +3,7 @@ import {
   calculateAddition,
   calculateDivision,
   calculateMultiplication,
+  calculatePercentage,
   calculatePower,
   calculateSquareRoot,
   calculateSubtraction,
@@ -222,6 +223,34 @@ describe('calculatorApi - calculateAddition (Axios)', () => {
       operation: 'sqrt',
       a: 81,
       result: 9,
+    });
+  });
+
+  it('sends POST request via Axios to /calculate/percentage and unwraps standardized envelope', async () => {
+    vi.mocked(httpClient.post).mockResolvedValueOnce({
+      data: {
+        erro: false,
+        message: 'Operation completed successfully',
+        data: {
+          operation: 'percentage',
+          a: 15,
+          b: 200,
+          result: 30,
+        },
+        httpcode: 200,
+        timestamp: '2026-10-26T21:00:00Z',
+      },
+    });
+
+    const response = await calculatePercentage(15, 200);
+
+    expect(httpClient.post).toHaveBeenCalledTimes(1);
+    expect(httpClient.post).toHaveBeenCalledWith('/calculate/percentage', { a: 15, b: 200 });
+    expect(response).toEqual({
+      operation: 'percentage',
+      a: 15,
+      b: 200,
+      result: 30,
     });
   });
 });

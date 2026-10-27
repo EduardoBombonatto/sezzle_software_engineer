@@ -11,6 +11,7 @@ vi.mock('../api/calculatorApi', () => ({
   calculateDivision: vi.fn(),
   calculatePower: vi.fn(),
   calculateSquareRoot: vi.fn(),
+  calculatePercentage: vi.fn(),
 }));
 
 describe('Calculator Component (Addition)', () => {
@@ -245,5 +246,29 @@ describe('Calculator Component (Addition)', () => {
 
     expect(await screen.findByTestId('calculation-result')).toHaveTextContent('9');
     expect(screen.getByTestId('history-list')).toHaveTextContent('√(81) = 9');
+  });
+
+  it('calculates percentage via Axios API when Percentage (%) is selected', async () => {
+    const user = userEvent.setup();
+    vi.mocked(calculatorApi.calculatePercentage).mockResolvedValueOnce({
+      operation: 'percentage',
+      a: 20,
+      b: 150,
+      result: 30,
+    });
+
+    render(<Calculator />);
+
+    await user.click(screen.getByRole('button', { name: /percentage/i }));
+    await user.type(screen.getByLabelText(/first operand/i), '20');
+    await user.type(screen.getByLabelText(/second operand/i), '150');
+    await user.click(screen.getByRole('button', { name: /^calculate$/i }));
+
+    await waitFor(() => {
+      expect(calculatorApi.calculatePercentage).toHaveBeenCalledWith(20, 150);
+    });
+
+    expect(await screen.findByTestId('calculation-result')).toHaveTextContent('30');
+    expect(screen.getByTestId('history-list')).toHaveTextContent('20 % of 150 = 30');
   });
 });

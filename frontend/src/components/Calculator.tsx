@@ -16,6 +16,7 @@ const AVAILABLE_OPERATIONS: OperationOption[] = [
   { type: 'divide', label: 'Divide (÷)', symbol: '÷' },
   { type: 'power', label: 'Power (xʸ)', symbol: '^' },
   { type: 'sqrt', label: 'Square Root (√x)', symbol: '√' },
+  { type: 'percentage', label: 'Percentage (%)', symbol: '%' },
 ];
 
 export function Calculator() {

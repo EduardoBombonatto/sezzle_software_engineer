@@ -647,3 +647,78 @@ func TestSqrt(t *testing.T) {
 		})
 	}
 }
+
+func TestPercentage(t *testing.T) {
+	t.Parallel()
+
+	svc := calculator.NewService()
+
+	runBinaryTestCases(t, svc.Percentage, []binaryTestCase{
+		{
+			name:     "standard percentage 20 percent of 150",
+			operandA: 20,
+			operandB: 150,
+			expected: 30,
+		},
+		{
+			name:     "decimal percentage 12.5 percent of 80",
+			operandA: 12.5,
+			operandB: 80,
+			expected: 10,
+		},
+		{
+			name:     "duplicate equal elements 50 percent of 50",
+			operandA: 50,
+			operandB: 50,
+			expected: 25,
+		},
+		{
+			name:     "zero percent of number yields zero",
+			operandA: 0,
+			operandB: 500,
+			expected: 0,
+		},
+		{
+			name:     "negative percentage of zero normalizes -0.0 to 0.0",
+			operandA: -25,
+			operandB: 0,
+			expected: 0,
+		},
+		{
+			name:     "negative percentage of positive number",
+			operandA: -10,
+			operandB: 200,
+			expected: -20,
+		},
+		{
+			name:     "50 percent of MaxFloat64 avoids intermediate overflow",
+			operandA: 50,
+			operandB: math.MaxFloat64,
+			expected: math.MaxFloat64 * 0.5,
+		},
+		{
+			name:        "200 percent of MaxFloat64 overflows float64",
+			operandA:    200,
+			operandB:    math.MaxFloat64,
+			expectedErr: calculator.ErrOverflow,
+		},
+		{
+			name:        "NaN first operand rejected before calculation",
+			operandA:    math.NaN(),
+			operandB:    100,
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+		{
+			name:        "NaN second operand rejected before calculation",
+			operandA:    20,
+			operandB:    math.NaN(),
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+		{
+			name:        "infinite operand rejected before calculation",
+			operandA:    math.Inf(1),
+			operandB:    50,
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+	})
+}

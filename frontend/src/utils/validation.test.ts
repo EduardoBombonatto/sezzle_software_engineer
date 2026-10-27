@@ -162,4 +162,21 @@ describe('Frontend Calculator Validation (Addition)', () => {
       errorMessage: 'First operand is required',
     });
   });
+
+  it('validates percentage inputs, avoids intermediate overflow for 50% of MAX_VALUE, and detects true overflow', () => {
+    const validPct = validateBinaryOperation('20', '150', 'percentage');
+    expect(validPct).toEqual({
+      isValid: true,
+      operandA: 20,
+      operandB: 150,
+    });
+
+    const maxFloat = String(Number.MAX_VALUE);
+    const safeExtreme = validateBinaryOperation('50', maxFloat, 'percentage');
+    expect(safeExtreme.isValid).toBe(true);
+
+    const overflowPct = validateBinaryOperation('200', maxFloat, 'percentage');
+    expect(overflowPct.isValid).toBe(false);
+    expect(overflowPct.errorMessage).toContain('overflow');
+  });
 });

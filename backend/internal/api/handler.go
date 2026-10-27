@@ -8,12 +8,13 @@ import (
 )
 
 const (
-	OperationAdd      = "add"
-	OperationSubtract = "subtract"
-	OperationMultiply = "multiply"
-	OperationDivide   = "divide"
-	OperationPower    = "power"
-	OperationSqrt     = "sqrt"
+	OperationAdd        = "add"
+	OperationSubtract   = "subtract"
+	OperationMultiply   = "multiply"
+	OperationDivide     = "divide"
+	OperationPower      = "power"
+	OperationSqrt       = "sqrt"
+	OperationPercentage = "percentage"
 )
 
 // Handler manages HTTP endpoints for the calculator microservice.
@@ -39,6 +40,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	mux.HandleFunc("/api/v1/calculate/divide", h.handleBinaryOperation(OperationDivide, h.calculator.Divide))
 	mux.HandleFunc("/api/v1/calculate/power", h.handleBinaryOperation(OperationPower, h.calculator.Power))
 	mux.HandleFunc("/api/v1/calculate/sqrt", h.handleUnaryOperation(OperationSqrt, h.calculator.Sqrt))
+	mux.HandleFunc("/api/v1/calculate/percentage", h.handleBinaryOperation(OperationPercentage, h.calculator.Percentage))
 
 	return withMiddleware(mux)
 }
