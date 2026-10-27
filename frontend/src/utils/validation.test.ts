@@ -83,4 +83,28 @@ describe('Frontend Calculator Validation (Addition)', () => {
     expect(overflowRes.isValid).toBe(false);
     expect(overflowRes.errorMessage).toContain('overflow');
   });
+
+  it('validates division inputs, rejects division by zero (+0 and -0), and detects overflow', () => {
+    const validRes = validateBinaryOperation('45', '6', 'divide');
+    expect(validRes.isValid).toBe(true);
+    expect(validRes.operandA).toBe(45);
+    expect(validRes.operandB).toBe(6);
+
+    const divByZero = validateBinaryOperation('10', '0', 'divide');
+    expect(divByZero).toEqual({
+      isValid: false,
+      errorMessage: 'Division by zero is not allowed',
+    });
+
+    const divByNegZero = validateBinaryOperation('10', '-0.0', 'divide');
+    expect(divByNegZero).toEqual({
+      isValid: false,
+      errorMessage: 'Division by zero is not allowed',
+    });
+
+    const maxFloat = String(Number.MAX_VALUE);
+    const overflowRes = validateBinaryOperation(maxFloat, '0.5', 'divide');
+    expect(overflowRes.isValid).toBe(false);
+    expect(overflowRes.errorMessage).toContain('overflow');
+  });
 });

@@ -8,6 +8,7 @@ vi.mock('../api/calculatorApi', () => ({
   calculateAddition: vi.fn(),
   calculateSubtraction: vi.fn(),
   calculateMultiplication: vi.fn(),
+  calculateDivision: vi.fn(),
 }));
 
 describe('Calculator Component (Addition)', () => {
@@ -139,5 +140,37 @@ describe('Calculator Component (Addition)', () => {
 
     expect(await screen.findByTestId('calculation-result')).toHaveTextContent('72');
     expect(screen.getByTestId('history-list')).toHaveTextContent('8 × 9 = 72');
+  });
+
+  it('calculates division via Axios API and blocks division by zero before network call', async () => {
+    const user = userEvent.setup();
+    vi.mocked(calculatorApi.calculateDivision).mockResolvedValueOnce({
+      operation: 'divide',
+      a: 45,
+      b: 6,
+      result: 7.5,
+    });
+
+    render(<Calculator />);
+
+    await user.click(screen.getByRole('button', { name: /divide/i }));
+    await user.type(screen.getByLabelText(/first operand/i), '45');
+    await user.type(screen.getByLabelText(/second operand/i), '0');
+    await user.click(screen.getByRole('button', { name: /^calculate$/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/division by zero is not allowed/i);
+    expect(calculatorApi.calculateDivision).not.toHaveBeenCalled();
+
+    const inputB = screen.getByLabelText(/second operand/i);
+    await user.clear(inputB);
+    await user.type(inputB, '6');
+    await user.click(screen.getByRole('button', { name: /^calculate$/i }));
+
+    await waitFor(() => {
+      expect(calculatorApi.calculateDivision).toHaveBeenCalledWith(45, 6);
+    });
+
+    expect(await screen.findByTestId('calculation-result')).toHaveTextContent('7.5');
+    expect(screen.getByTestId('history-list')).toHaveTextContent('45 ÷ 6 = 7.5');
   });
 });

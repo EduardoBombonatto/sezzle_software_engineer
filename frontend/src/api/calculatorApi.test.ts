@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   calculateAddition,
+  calculateDivision,
   calculateMultiplication,
   calculateSubtraction,
 } from './calculatorApi';
@@ -121,6 +122,37 @@ describe('calculatorApi - calculateAddition (Axios)', () => {
       a: 6,
       b: 7,
       result: 42,
+    });
+  });
+
+  it('sends POST request via Axios to /calculate/divide and blocks division by zero before network call', async () => {
+    await expect(calculateDivision(10, 0)).rejects.toThrow('Division by zero is not allowed');
+    expect(httpClient.post).not.toHaveBeenCalled();
+
+    vi.mocked(httpClient.post).mockResolvedValueOnce({
+      data: {
+        erro: false,
+        message: 'Operation completed successfully',
+        data: {
+          operation: 'divide',
+          a: 45,
+          b: 6,
+          result: 7.5,
+        },
+        httpcode: 200,
+        timestamp: '2026-10-26T21:00:00Z',
+      },
+    });
+
+    const response = await calculateDivision(45, 6);
+
+    expect(httpClient.post).toHaveBeenCalledTimes(1);
+    expect(httpClient.post).toHaveBeenCalledWith('/calculate/divide', { a: 45, b: 6 });
+    expect(response).toEqual({
+      operation: 'divide',
+      a: 45,
+      b: 6,
+      result: 7.5,
     });
   });
 });

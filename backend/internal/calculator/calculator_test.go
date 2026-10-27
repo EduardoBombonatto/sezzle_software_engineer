@@ -324,3 +324,108 @@ func TestMultiply(t *testing.T) {
 		},
 	})
 }
+
+func TestDivide(t *testing.T) {
+	t.Parallel()
+
+	svc := calculator.NewService()
+
+	runBinaryTestCases(t, svc.Divide, []binaryTestCase{
+		{
+			name:     "positive exact division",
+			operandA: 42,
+			operandB: 6,
+			expected: 7,
+		},
+		{
+			name:     "decimal quotient",
+			operandA: 15,
+			operandB: 4,
+			expected: 3.75,
+		},
+		{
+			name:     "negative divided by negative yields positive",
+			operandA: -18,
+			operandB: -3,
+			expected: 6,
+		},
+		{
+			name:     "negative divided by positive yields negative",
+			operandA: -15,
+			operandB: 2,
+			expected: -7.5,
+		},
+		{
+			name:     "duplicate non-zero elements yield 1",
+			operandA: 77.7,
+			operandB: 77.7,
+			expected: 1,
+		},
+		{
+			name:     "duplicate MaxFloat64 divided by MaxFloat64 yields 1",
+			operandA: math.MaxFloat64,
+			operandB: math.MaxFloat64,
+			expected: 1,
+		},
+		{
+			name:     "zero divided by positive number yields zero",
+			operandA: 0,
+			operandB: 42,
+			expected: 0,
+		},
+		{
+			name:     "zero divided by negative number normalizes -0.0 to 0.0",
+			operandA: 0,
+			operandB: -42,
+			expected: 0,
+		},
+		{
+			name:        "division by positive zero rejected before calculation",
+			operandA:    100,
+			operandB:    0,
+			expectedErr: calculator.ErrDivisionByZero,
+		},
+		{
+			name:        "division by negative zero rejected before calculation",
+			operandA:    100,
+			operandB:    math.Copysign(0, -1),
+			expectedErr: calculator.ErrDivisionByZero,
+		},
+		{
+			name:        "zero divided by zero rejected as division by zero",
+			operandA:    0,
+			operandB:    0,
+			expectedErr: calculator.ErrDivisionByZero,
+		},
+		{
+			name:        "division of MaxFloat64 by fractional number overflows",
+			operandA:    math.MaxFloat64,
+			operandB:    0.5,
+			expectedErr: calculator.ErrOverflow,
+		},
+		{
+			name:        "division of negative MaxFloat64 by fractional number overflows",
+			operandA:    -math.MaxFloat64,
+			operandB:    0.5,
+			expectedErr: calculator.ErrOverflow,
+		},
+		{
+			name:        "NaN first operand rejected before calculation",
+			operandA:    math.NaN(),
+			operandB:    2,
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+		{
+			name:        "NaN second operand rejected before calculation",
+			operandA:    2,
+			operandB:    math.NaN(),
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+		{
+			name:        "infinite operand rejected before calculation",
+			operandA:    math.Inf(1),
+			operandB:    2,
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+	})
+}

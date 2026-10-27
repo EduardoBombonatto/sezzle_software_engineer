@@ -79,6 +79,22 @@ export function validateBinaryOperation(
     }
   }
 
+  if (operation === 'divide') {
+    if (operandB === 0) {
+      return {
+        isValid: false,
+        errorMessage: 'Division by zero is not allowed',
+      };
+    }
+    const previewQuot = operandA / operandB;
+    if (!Number.isFinite(previewQuot)) {
+      return {
+        isValid: false,
+        errorMessage: 'Arithmetic result overflowed maximum float64 bounds',
+      };
+    }
+  }
+
   return {
     isValid: true,
     operandA,

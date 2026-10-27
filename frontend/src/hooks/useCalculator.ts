@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   calculateAddition,
+  calculateDivision,
   calculateMultiplication,
   calculateSubtraction,
 } from '../api/calculatorApi';
@@ -18,6 +19,7 @@ const OPERATION_SYMBOLS: Record<OperationType, string> = {
   add: '+',
   subtract: '-',
   multiply: '×',
+  divide: '÷',
 };
 
 const BINARY_OPERATION_EXECUTORS: Record<
@@ -27,6 +29,7 @@ const BINARY_OPERATION_EXECUTORS: Record<
   add: calculateAddition,
   subtract: calculateSubtraction,
   multiply: calculateMultiplication,
+  divide: calculateDivision,
 };
 
 export function useCalculator() {

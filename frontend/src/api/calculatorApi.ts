@@ -85,3 +85,17 @@ export async function calculateMultiplication(
     b: normalizeZero(operandB),
   });
 }
+
+export async function calculateDivision(
+  operandA: number,
+  operandB: number
+): Promise<CalculationResponseData> {
+  assertFiniteNumbers(operandA, operandB);
+  if (operandB === 0) {
+    throw new Error('Division by zero is not allowed');
+  }
+  return postCalculation('/calculate/divide', {
+    a: normalizeZero(operandA),
+    b: normalizeZero(operandB),
+  });
+}

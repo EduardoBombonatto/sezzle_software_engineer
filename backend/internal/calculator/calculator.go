@@ -11,6 +11,9 @@ var (
 
 	// ErrOverflow indicates that the arithmetic result exceeded IEEE 754 float64 bounds.
 	ErrOverflow = errors.New("arithmetic result overflowed maximum float64 bounds")
+
+	// ErrDivisionByZero indicates an attempt to divide a number by zero.
+	ErrDivisionByZero = errors.New("division by zero is not allowed")
 )
 
 // Calculator defines the contract for arithmetic operations.
@@ -18,6 +21,7 @@ type Calculator interface {
 	Add(operandA, operandB float64) (float64, error)
 	Subtract(operandA, operandB float64) (float64, error)
 	Multiply(operandA, operandB float64) (float64, error)
+	Divide(operandA, operandB float64) (float64, error)
 }
 
 // Service implements the Calculator domain logic with O(1) time and O(1) space complexity.
@@ -56,6 +60,20 @@ func (s *Service) Multiply(operandA, operandB float64) (float64, error) {
 	}
 
 	return finalizeResult(operandA * operandB)
+}
+
+// Divide computes the quotient (operandA / operandB) of two finite float64 numbers.
+// It fails fast before executing division if operandB is zero (+0.0 or -0.0).
+func (s *Service) Divide(operandA, operandB float64) (float64, error) {
+	if err := validateFiniteOperands(operandA, operandB); err != nil {
+		return 0, err
+	}
+
+	if operandB == 0 {
+		return 0, ErrDivisionByZero
+	}
+
+	return finalizeResult(operandA / operandB)
 }
 
 func validateFiniteOperands(operands ...float64) error {
