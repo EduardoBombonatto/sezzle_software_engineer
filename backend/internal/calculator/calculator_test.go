@@ -140,3 +140,124 @@ func TestAdd(t *testing.T) {
 		})
 	}
 }
+
+func TestSubtract(t *testing.T) {
+	t.Parallel()
+
+	svc := calculator.NewService()
+
+	testCases := []struct {
+		name        string
+		operandA    float64
+		operandB    float64
+		expected    float64
+		expectedErr error
+	}{
+		{
+			name:     "positive integers",
+			operandA: 25,
+			operandB: 10,
+			expected: 15,
+		},
+		{
+			name:     "subtracting larger from smaller yields negative",
+			operandA: 10.5,
+			operandB: 25.5,
+			expected: -15.0,
+		},
+		{
+			name:     "negative numbers",
+			operandA: -15.5,
+			operandB: -5.5,
+			expected: -10.0,
+		},
+		{
+			name:     "duplicate equal elements cancel to zero",
+			operandA: 99.95,
+			operandB: 99.95,
+			expected: 0,
+		},
+		{
+			name:     "duplicate extreme MaxFloat64 values cancel to zero",
+			operandA: math.MaxFloat64,
+			operandB: math.MaxFloat64,
+			expected: 0,
+		},
+		{
+			name:     "both operands zero",
+			operandA: 0,
+			operandB: 0,
+			expected: 0,
+		},
+		{
+			name:     "negative zero minus positive zero normalizes to positive zero",
+			operandA: math.Copysign(0, -1),
+			operandB: 0,
+			expected: 0,
+		},
+		{
+			name:     "smallest nonzero float64 values cancel to zero",
+			operandA: math.SmallestNonzeroFloat64,
+			operandB: math.SmallestNonzeroFloat64,
+			expected: 0,
+		},
+		{
+			name:        "positive float64 overflow when subtracting negative MaxFloat64",
+			operandA:    math.MaxFloat64,
+			operandB:    -math.MaxFloat64,
+			expectedErr: calculator.ErrOverflow,
+		},
+		{
+			name:        "negative float64 overflow when subtracting positive MaxFloat64",
+			operandA:    -math.MaxFloat64,
+			operandB:    math.MaxFloat64,
+			expectedErr: calculator.ErrOverflow,
+		},
+		{
+			name:        "NaN first operand rejected before calculation",
+			operandA:    math.NaN(),
+			operandB:    5,
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+		{
+			name:        "NaN second operand rejected before calculation",
+			operandA:    5,
+			operandB:    math.NaN(),
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+		{
+			name:        "infinite operand rejected before calculation",
+			operandA:    math.Inf(1),
+			operandB:    5,
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := svc.Subtract(tc.operandA, tc.operandB)
+
+			if tc.expectedErr != nil {
+				if !errors.Is(err, tc.expectedErr) {
+					t.Fatalf("expected error %v, got %v", tc.expectedErr, err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+
+			if result != tc.expected {
+				t.Fatalf("expected %v, got %v", tc.expected, result)
+			}
+
+			if result == 0 && math.Signbit(result) {
+				t.Fatalf("expected positive zero (0.0), got negative zero (-0.0)")
+			}
+		})
+	}
+}

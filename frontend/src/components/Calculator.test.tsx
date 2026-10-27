@@ -6,6 +6,7 @@ import { Calculator } from './Calculator';
 
 vi.mock('../api/calculatorApi', () => ({
   calculateAddition: vi.fn(),
+  calculateSubtraction: vi.fn(),
 }));
 
 describe('Calculator Component (Addition)', () => {
@@ -89,5 +90,29 @@ describe('Calculator Component (Addition)', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       /arithmetic result overflowed maximum float64 bounds/i
     );
+  });
+
+  it('calculates subtraction via Axios API when Subtract (-) is selected', async () => {
+    const user = userEvent.setup();
+    vi.mocked(calculatorApi.calculateSubtraction).mockResolvedValueOnce({
+      operation: 'subtract',
+      a: 50,
+      b: 18,
+      result: 32,
+    });
+
+    render(<Calculator />);
+
+    await user.click(screen.getByRole('button', { name: /subtract/i }));
+    await user.type(screen.getByLabelText(/first operand/i), '50');
+    await user.type(screen.getByLabelText(/second operand/i), '18');
+    await user.click(screen.getByRole('button', { name: /^calculate$/i }));
+
+    await waitFor(() => {
+      expect(calculatorApi.calculateSubtraction).toHaveBeenCalledWith(50, 18);
+    });
+
+    expect(await screen.findByTestId('calculation-result')).toHaveTextContent('32');
+    expect(screen.getByTestId('history-list')).toHaveTextContent('50 - 18 = 32');
   });
 });

@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	OperationAdd = "add"
+	OperationAdd      = "add"
+	OperationSubtract = "subtract"
 )
 
 // Handler manages HTTP endpoints for the calculator microservice.
@@ -29,6 +30,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 
 	mux.HandleFunc("/api/v1/health", h.handleHealth)
 	mux.HandleFunc("/api/v1/calculate/add", h.handleBinaryOperation(OperationAdd, h.calculator.Add))
+	mux.HandleFunc("/api/v1/calculate/subtract", h.handleBinaryOperation(OperationSubtract, h.calculator.Subtract))
 
 	return withMiddleware(mux)
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { calculateAddition } from '../api/calculatorApi';
+import { calculateAddition, calculateSubtraction } from '../api/calculatorApi';
 import type { CalculationHistoryEntry, OperationType } from '../types/calculator';
 import { formatNumberForDisplay, validateBinaryOperation } from '../utils/validation';
 
@@ -8,6 +8,7 @@ export const NOTIFICATION_DURATION_MS = 4000;
 
 const OPERATION_SYMBOLS: Record<OperationType, string> = {
   add: '+',
+  subtract: '-',
 };
 
 export function useCalculator() {
@@ -56,7 +57,10 @@ export function useCalculator() {
 
     setIsLoading(true);
     try {
-      const data = await calculateAddition(validation.operandA, validation.operandB);
+      const data =
+        selectedOperation === 'subtract'
+          ? await calculateSubtraction(validation.operandA, validation.operandB)
+          : await calculateAddition(validation.operandA, validation.operandB);
       const formattedResult = formatNumberForDisplay(data.result);
       setResult(formattedResult);
 

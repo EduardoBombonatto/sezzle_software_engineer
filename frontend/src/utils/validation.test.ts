@@ -59,4 +59,16 @@ describe('Frontend Calculator Validation (Addition)', () => {
     expect(formatNumberForDisplay(-0)).toBe('0');
     expect(formatNumberForDisplay(15.25)).toBe('15.25');
   });
+
+  it('validates subtraction inputs and detects float64 subtraction overflow', () => {
+    const validRes = validateBinaryOperation('25.5', '10.25', 'subtract');
+    expect(validRes.isValid).toBe(true);
+    expect(validRes.operandA).toBe(25.5);
+    expect(validRes.operandB).toBe(10.25);
+
+    const maxFloat = String(Number.MAX_VALUE);
+    const overflowRes = validateBinaryOperation(maxFloat, `-${maxFloat}`, 'subtract');
+    expect(overflowRes.isValid).toBe(false);
+    expect(overflowRes.errorMessage).toContain('overflow');
+  });
 });

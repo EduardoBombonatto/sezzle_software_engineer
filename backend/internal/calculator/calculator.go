@@ -16,6 +16,7 @@ var (
 // Calculator defines the contract for arithmetic operations.
 type Calculator interface {
 	Add(operandA, operandB float64) (float64, error)
+	Subtract(operandA, operandB float64) (float64, error)
 }
 
 // Service implements the Calculator domain logic with O(1) time and O(1) space complexity.
@@ -34,6 +35,16 @@ func (s *Service) Add(operandA, operandB float64) (float64, error) {
 	}
 
 	return finalizeResult(operandA + operandB)
+}
+
+// Subtract computes the difference (operandA - operandB) of two finite float64 numbers
+// after validating preconditions and checking for IEEE 754 float64 overflow.
+func (s *Service) Subtract(operandA, operandB float64) (float64, error) {
+	if err := validateFiniteOperands(operandA, operandB); err != nil {
+		return 0, err
+	}
+
+	return finalizeResult(operandA - operandB)
 }
 
 func validateFiniteOperands(operands ...float64) error {

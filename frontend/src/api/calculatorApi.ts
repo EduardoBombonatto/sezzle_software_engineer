@@ -63,3 +63,14 @@ export async function calculateAddition(
     b: normalizeZero(operandB),
   });
 }
+
+export async function calculateSubtraction(
+  operandA: number,
+  operandB: number
+): Promise<CalculationResponseData> {
+  assertFiniteNumbers(operandA, operandB);
+  return postCalculation('/calculate/subtract', {
+    a: normalizeZero(operandA),
+    b: normalizeZero(operandB),
+  });
+}

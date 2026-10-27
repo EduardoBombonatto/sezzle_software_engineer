@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { calculateAddition } from './calculatorApi';
+import { calculateAddition, calculateSubtraction } from './calculatorApi';
 import { httpClient } from './httpClient';
 
 vi.mock('./httpClient', () => ({
@@ -62,5 +62,33 @@ describe('calculatorApi - calculateAddition (Axios)', () => {
     await expect(calculateAddition(1, 2)).rejects.toThrow(
       'Arithmetic result overflowed maximum float64 bounds'
     );
+  });
+
+  it('sends POST request via Axios to /calculate/subtract and unwraps standardized envelope', async () => {
+    vi.mocked(httpClient.post).mockResolvedValueOnce({
+      data: {
+        erro: false,
+        message: 'Operation completed successfully',
+        data: {
+          operation: 'subtract',
+          a: 30,
+          b: 12,
+          result: 18,
+        },
+        httpcode: 200,
+        timestamp: '2026-10-26T21:00:00Z',
+      },
+    });
+
+    const response = await calculateSubtraction(30, 12);
+
+    expect(httpClient.post).toHaveBeenCalledTimes(1);
+    expect(httpClient.post).toHaveBeenCalledWith('/calculate/subtract', { a: 30, b: 12 });
+    expect(response).toEqual({
+      operation: 'subtract',
+      a: 30,
+      b: 12,
+      result: 18,
+    });
   });
 });

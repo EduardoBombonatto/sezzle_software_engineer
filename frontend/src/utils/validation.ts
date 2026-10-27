@@ -59,6 +59,16 @@ export function validateBinaryOperation(
     }
   }
 
+  if (operation === 'subtract') {
+    const previewDiff = operandA - operandB;
+    if (!Number.isFinite(previewDiff)) {
+      return {
+        isValid: false,
+        errorMessage: 'Arithmetic result overflowed maximum float64 bounds',
+      };
+    }
+  }
+
   return {
     isValid: true,
     operandA,

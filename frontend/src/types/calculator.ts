@@ -1,4 +1,4 @@
-export type OperationType = 'add';
+export type OperationType = 'add' | 'subtract';
 
 export interface ApiEnvelope<T> {
   erro: boolean;
