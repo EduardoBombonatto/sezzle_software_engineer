@@ -1,0 +1,287 @@
+:root {
+  --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --accent-primary: #6366f1;
+  --accent-hover: #4f46e5;
+  --error-bg: rgba(127, 29, 29, 0.92);
+  --error-border: #ef4444;
+  --error-text: #fecaca;
+  --display-bg: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text-primary);
+}
+
+.calculator-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2rem;
+}
+
+.notification-slot {
+  min-height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.toast-notification {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  color: var(--error-text);
+  padding: 0.8rem 1.1rem;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.45);
+  animation: toastFadeLifecycle 4s ease forwards;
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: var(--error-text);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem;
+}
+
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--error-border);
+  width: 100%;
+  animation: toastProgressShrink 4s linear forwards;
+}
+
+@keyframes toastFadeLifecycle {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  8% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes toastProgressShrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.calculator-layout {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .calculator-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.calculator-card,
+.history-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+}
+
+.calculator-header h1 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0.35rem 0 1.25rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.display-panel {
+  background: var(--display-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  text-align: right;
+}
+
+.display-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.display-value {
+  font-size: 2rem;
+  font-weight: 700;
+  word-break: break-all;
+  margin-top: 0.25rem;
+}
+
+.calculator-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.input-group label,
+.operations-fieldset legend {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.input-group input {
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--display-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.input-group input:focus {
+  outline: 2px solid var(--accent-primary);
+  border-color: transparent;
+}
+
+.operations-fieldset {
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 0.75rem;
+  margin: 0;
+}
+
+.operations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+
+.op-button {
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--display-bg);
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.op-button.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.primary-button,
+.secondary-button {
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+}
+
+.primary-button {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.primary-button:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.secondary-button {
+  background: transparent;
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+}
+
+.history-card h2 {
+  margin: 0 0 1rem;
+  font-size: 1.2rem;
+}
+
+.empty-history {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.history-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.65rem 0.85rem;
+  background: var(--display-bg);
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  font-size: 0.92rem;
+}

@@ -1,0 +1,3 @@
+module github.com/eduardobombonatto/sezzle-calculator/backend
+
+go 1.27.3
