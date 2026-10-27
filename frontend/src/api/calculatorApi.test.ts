@@ -4,6 +4,7 @@ import {
   calculateDivision,
   calculateMultiplication,
   calculatePower,
+  calculateSquareRoot,
   calculateSubtraction,
 } from './calculatorApi';
 import { httpClient } from './httpClient';
@@ -190,6 +191,37 @@ describe('calculatorApi - calculateAddition (Axios)', () => {
       a: 2,
       b: 8,
       result: 256,
+    });
+  });
+
+  it('sends POST request via Axios to /calculate/sqrt and blocks negative numbers before network call', async () => {
+    await expect(calculateSquareRoot(-9)).rejects.toThrow(
+      'Cannot calculate square root of a negative number'
+    );
+    expect(httpClient.post).not.toHaveBeenCalled();
+
+    vi.mocked(httpClient.post).mockResolvedValueOnce({
+      data: {
+        erro: false,
+        message: 'Operation completed successfully',
+        data: {
+          operation: 'sqrt',
+          a: 81,
+          result: 9,
+        },
+        httpcode: 200,
+        timestamp: '2026-10-26T21:00:00Z',
+      },
+    });
+
+    const response = await calculateSquareRoot(81);
+
+    expect(httpClient.post).toHaveBeenCalledTimes(1);
+    expect(httpClient.post).toHaveBeenCalledWith('/calculate/sqrt', { a: 81 });
+    expect(response).toEqual({
+      operation: 'sqrt',
+      a: 81,
+      result: 9,
     });
   });
 });

@@ -116,3 +116,15 @@ export async function calculatePower(
     b: normalizeZero(exponent),
   });
 }
+
+export async function calculateSquareRoot(
+  operand: number
+): Promise<CalculationResponseData> {
+  assertFiniteNumbers(operand);
+  if (operand < 0) {
+    throw new Error('Cannot calculate square root of a negative number');
+  }
+  return postCalculation('/calculate/sqrt', {
+    a: normalizeZero(operand),
+  });
+}

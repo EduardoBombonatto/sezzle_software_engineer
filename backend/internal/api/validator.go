@@ -108,3 +108,34 @@ func parseBinaryOperands(w http.ResponseWriter, r *http.Request) (float64, float
 
 	return operandA, operandB, nil
 }
+
+func parseUnaryOperand(w http.ResponseWriter, r *http.Request) (float64, *validationError) {
+	req, valErr := validatePostJSONRequest(w, r)
+	if valErr != nil {
+		return 0, valErr
+	}
+
+	if req.OperandA == nil {
+		return 0, &validationError{
+			statusCode: http.StatusBadRequest,
+			message:    "Operand 'a' is required for this unary operation",
+		}
+	}
+
+	if req.OperandB != nil {
+		return 0, &validationError{
+			statusCode: http.StatusBadRequest,
+			message:    "Unary operation does not accept a second operand 'b'",
+		}
+	}
+
+	operandA := *req.OperandA
+	if math.IsNaN(operandA) || math.IsInf(operandA, 0) {
+		return 0, &validationError{
+			statusCode: http.StatusBadRequest,
+			message:    "Operand 'a' must be a finite number",
+		}
+	}
+
+	return operandA, nil
+}

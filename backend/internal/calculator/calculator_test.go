@@ -540,3 +540,110 @@ func TestPower(t *testing.T) {
 		},
 	})
 }
+
+func TestSqrt(t *testing.T) {
+	t.Parallel()
+
+	svc := calculator.NewService()
+
+	testCases := []struct {
+		name        string
+		operand     float64
+		expected    float64
+		expectedErr error
+	}{
+		{
+			name:     "perfect square integer",
+			operand:  81,
+			expected: 9,
+		},
+		{
+			name:     "decimal square root",
+			operand:  2.25,
+			expected: 1.5,
+		},
+		{
+			name:     "irrational square root of 2",
+			operand:  2,
+			expected: math.Sqrt2,
+		},
+		{
+			name:     "square root of zero yields zero",
+			operand:  0,
+			expected: 0,
+		},
+		{
+			name:     "square root of negative zero normalizes -0.0 to 0.0",
+			operand:  math.Copysign(0, -1),
+			expected: 0,
+		},
+		{
+			name:     "square root of 1 yields 1",
+			operand:  1,
+			expected: 1,
+		},
+		{
+			name:     "square root of MaxFloat64 stays finite",
+			operand:  math.MaxFloat64,
+			expected: math.Sqrt(math.MaxFloat64),
+		},
+		{
+			name:     "square root of SmallestNonzeroFloat64 stays finite",
+			operand:  math.SmallestNonzeroFloat64,
+			expected: math.Sqrt(math.SmallestNonzeroFloat64),
+		},
+		{
+			name:        "negative number rejected before calculation",
+			operand:     -16,
+			expectedErr: calculator.ErrNegativeSquareRoot,
+		},
+		{
+			name:        "negative Tiny number rejected before calculation",
+			operand:     -1e-12,
+			expectedErr: calculator.ErrNegativeSquareRoot,
+		},
+		{
+			name:        "negative MaxFloat64 rejected before calculation",
+			operand:     -math.MaxFloat64,
+			expectedErr: calculator.ErrNegativeSquareRoot,
+		},
+		{
+			name:        "NaN operand rejected before calculation",
+			operand:     math.NaN(),
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+		{
+			name:        "positive infinity rejected before calculation",
+			operand:     math.Inf(1),
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := svc.Sqrt(tc.operand)
+
+			if tc.expectedErr != nil {
+				if !errors.Is(err, tc.expectedErr) {
+					t.Fatalf("expected error %v, got %v", tc.expectedErr, err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+
+			if math.Abs(result-tc.expected) > 1e-12 && result != tc.expected {
+				t.Fatalf("expected %v, got %v", tc.expected, result)
+			}
+
+			if result == 0 && math.Signbit(result) {
+				t.Fatalf("expected positive zero (0.0), got negative zero (-0.0)")
+			}
+		})
+	}
+}

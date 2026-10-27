@@ -648,3 +648,104 @@ func TestPowerEndpoint(t *testing.T) {
 		})
 	}
 }
+
+func TestSqrtEndpoint(t *testing.T) {
+	t.Parallel()
+
+	router := newTestServer()
+
+	testCases := []struct {
+		name              string
+		method            string
+		contentType       string
+		body              string
+		expectedStatus    int
+		expectedErrorFlag bool
+		expectedResult    float64
+		expectedMsgSubstr string
+	}{
+		{
+			name:              "valid square root of positive number",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{"a": 81}`,
+			expectedStatus:    http.StatusOK,
+			expectedErrorFlag: false,
+			expectedResult:    9.0,
+		},
+		{
+			name:              "valid square root of zero",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{"a": 0}`,
+			expectedStatus:    http.StatusOK,
+			expectedErrorFlag: false,
+			expectedResult:    0.0,
+		},
+		{
+			name:              "negative operand rejected with 422",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{"a": -25}`,
+			expectedStatus:    http.StatusUnprocessableEntity,
+			expectedErrorFlag: true,
+			expectedMsgSubstr: "cannot calculate square root of a negative number",
+		},
+		{
+			name:              "degenerate empty JSON object missing operand a",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{}`,
+			expectedStatus:    http.StatusBadRequest,
+			expectedErrorFlag: true,
+			expectedMsgSubstr: "Operand 'a' is required",
+		},
+		{
+			name:              "degenerate extra operand b rejected for unary operation",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{"a": 81, "b": 9}`,
+			expectedStatus:    http.StatusBadRequest,
+			expectedErrorFlag: true,
+			expectedMsgSubstr: "Unary operation does not accept a second operand 'b'",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := httptest.NewRequest(tc.method, "/api/v1/calculate/sqrt", bytes.NewBufferString(tc.body))
+			if tc.contentType != "" {
+				req.Header.Set("Content-Type", tc.contentType)
+			}
+			rec := httptest.NewRecorder()
+
+			router.ServeHTTP(rec, req)
+
+			env := assertStandardEnvelope(t, rec, tc.expectedStatus, tc.expectedErrorFlag)
+
+			if tc.expectedErrorFlag {
+				if !strings.Contains(strings.ToLower(env.Message), strings.ToLower(tc.expectedMsgSubstr)) {
+					t.Fatalf("expected error message containing %q, got %q", tc.expectedMsgSubstr, env.Message)
+				}
+				return
+			}
+
+			gotResult, ok := env.Data["result"].(float64)
+			if !ok {
+				t.Fatalf("expected numeric result in data, got %v", env.Data["result"])
+			}
+			if math.Abs(gotResult-tc.expectedResult) > 1e-9 {
+				t.Fatalf("expected result %v, got %v", tc.expectedResult, gotResult)
+			}
+			if env.Data["operation"] != "sqrt" {
+				t.Fatalf("expected operation 'sqrt', got %v", env.Data["operation"])
+			}
+			if _, hasB := env.Data["b"]; hasB {
+				t.Fatalf("expected unary operation response to omit 'b', got %v", env.Data["b"])
+			}
+		})
+	}
+}

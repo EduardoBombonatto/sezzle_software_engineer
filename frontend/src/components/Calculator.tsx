@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react';
 import { useCalculator } from '../hooks/useCalculator';
 import type { OperationType } from '../types/calculator';
-import { formatNumberForDisplay } from '../utils/validation';
+import { formatNumberForDisplay, isUnaryOperation } from '../utils/validation';
 
 interface OperationOption {
   type: OperationType;
@@ -15,6 +15,7 @@ const AVAILABLE_OPERATIONS: OperationOption[] = [
   { type: 'multiply', label: 'Multiply (×)', symbol: '×' },
   { type: 'divide', label: 'Divide (÷)', symbol: '÷' },
   { type: 'power', label: 'Power (xʸ)', symbol: '^' },
+  { type: 'sqrt', label: 'Square Root (√x)', symbol: '√' },
 ];
 
 export function Calculator() {
@@ -109,10 +110,14 @@ export function Calculator() {
                 id="operand-b"
                 type="text"
                 inputMode="decimal"
-                placeholder="Enter second number (e.g. 4.5)"
-                value={operandB}
+                placeholder={
+                  isUnaryOperation(selectedOperation)
+                    ? 'Not required for Square Root (√x)'
+                    : 'Enter second number (e.g. 4.5)'
+                }
+                value={isUnaryOperation(selectedOperation) ? '' : operandB}
                 onChange={(e) => setOperandB(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || isUnaryOperation(selectedOperation)}
               />
             </div>
 

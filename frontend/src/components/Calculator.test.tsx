@@ -10,6 +10,7 @@ vi.mock('../api/calculatorApi', () => ({
   calculateMultiplication: vi.fn(),
   calculateDivision: vi.fn(),
   calculatePower: vi.fn(),
+  calculateSquareRoot: vi.fn(),
 }));
 
 describe('Calculator Component (Addition)', () => {
@@ -210,5 +211,39 @@ describe('Calculator Component (Addition)', () => {
 
     expect(await screen.findByTestId('calculation-result')).toHaveTextContent('256');
     expect(screen.getByTestId('history-list')).toHaveTextContent('2 ^ 8 = 256');
+  });
+
+  it('calculates unary square root via Axios API, disables second operand, and blocks negative input', async () => {
+    const user = userEvent.setup();
+    vi.mocked(calculatorApi.calculateSquareRoot).mockResolvedValueOnce({
+      operation: 'sqrt',
+      a: 81,
+      result: 9,
+    });
+
+    render(<Calculator />);
+
+    await user.click(screen.getByRole('button', { name: /square root/i }));
+    expect(screen.getByLabelText(/second operand/i)).toBeDisabled();
+
+    const inputA = screen.getByLabelText(/first operand/i);
+    await user.type(inputA, '-25');
+    await user.click(screen.getByRole('button', { name: /^calculate$/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /cannot calculate square root of a negative number/i
+    );
+    expect(calculatorApi.calculateSquareRoot).not.toHaveBeenCalled();
+
+    await user.clear(inputA);
+    await user.type(inputA, '81');
+    await user.click(screen.getByRole('button', { name: /^calculate$/i }));
+
+    await waitFor(() => {
+      expect(calculatorApi.calculateSquareRoot).toHaveBeenCalledWith(81);
+    });
+
+    expect(await screen.findByTestId('calculation-result')).toHaveTextContent('9');
+    expect(screen.getByTestId('history-list')).toHaveTextContent('√(81) = 9');
   });
 });

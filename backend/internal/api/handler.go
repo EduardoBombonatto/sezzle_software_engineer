@@ -13,6 +13,7 @@ const (
 	OperationMultiply = "multiply"
 	OperationDivide   = "divide"
 	OperationPower    = "power"
+	OperationSqrt     = "sqrt"
 )
 
 // Handler manages HTTP endpoints for the calculator microservice.
@@ -37,6 +38,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	mux.HandleFunc("/api/v1/calculate/multiply", h.handleBinaryOperation(OperationMultiply, h.calculator.Multiply))
 	mux.HandleFunc("/api/v1/calculate/divide", h.handleBinaryOperation(OperationDivide, h.calculator.Divide))
 	mux.HandleFunc("/api/v1/calculate/power", h.handleBinaryOperation(OperationPower, h.calculator.Power))
+	mux.HandleFunc("/api/v1/calculate/sqrt", h.handleUnaryOperation(OperationSqrt, h.calculator.Sqrt))
 
 	return withMiddleware(mux)
 }
@@ -79,6 +81,32 @@ func (h *Handler) handleBinaryOperation(
 	}
 }
 
+func (h *Handler) handleUnaryOperation(
+	operationName string,
+	compute func(operandA float64) (float64, error),
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		operandA, valErr := parseUnaryOperand(w, r)
+		if valErr != nil {
+			writeError(w, valErr.statusCode, valErr.message)
+			return
+		}
+
+		result, err := compute(operandA)
+		if err != nil {
+			statusCode, msg := mapDomainError(err)
+			writeError(w, statusCode, msg)
+			return
+		}
+
+		writeSuccess(w, http.StatusOK, "Operation completed successfully", CalculationResult{
+			Operation: operationName,
+			OperandA:  operandA,
+			Result:    result,
+		})
+	}
+}
+
 func mapDomainError(err error) (int, string) {
 	switch {
 	case errors.Is(err, calculator.ErrInvalidOperand):
@@ -86,6 +114,7 @@ func mapDomainError(err error) (int, string) {
 	case errors.Is(err, calculator.ErrDivisionByZero),
 		errors.Is(err, calculator.ErrZeroToNegativePower),
 		errors.Is(err, calculator.ErrNegativeBaseFractionalExponent),
+		errors.Is(err, calculator.ErrNegativeSquareRoot),
 		errors.Is(err, calculator.ErrOverflow):
 		return http.StatusUnprocessableEntity, err.Error()
 	default:

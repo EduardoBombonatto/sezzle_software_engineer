@@ -4,6 +4,7 @@ import {
   calculateDivision,
   calculateMultiplication,
   calculatePower,
+  calculateSquareRoot,
   calculateSubtraction,
 } from '../api/calculatorApi';
 import type {
@@ -11,10 +12,17 @@ import type {
   CalculationResponseData,
   OperationType,
 } from '../types/calculator';
-import { formatNumberForDisplay, validateBinaryOperation } from '../utils/validation';
+import {
+  formatNumberForDisplay,
+  isUnaryOperation,
+  validateBinaryOperation,
+  validateUnaryOperation,
+} from '../utils/validation';
 
 const MAX_HISTORY_ENTRIES = 10;
 export const NOTIFICATION_DURATION_MS = 4000;
+
+type BinaryOperationType = Exclude<OperationType, 'sqrt'>;
 
 const OPERATION_SYMBOLS: Record<OperationType, string> = {
   add: '+',
@@ -22,10 +30,11 @@ const OPERATION_SYMBOLS: Record<OperationType, string> = {
   multiply: '×',
   divide: '÷',
   power: '^',
+  sqrt: '√',
 };
 
 const BINARY_OPERATION_EXECUTORS: Record<
-  OperationType,
+  BinaryOperationType,
   (operandA: number, operandB: number) => Promise<CalculationResponseData>
 > = {
   add: calculateAddition,
@@ -72,6 +81,38 @@ export function useCalculator() {
   const executeCalculation = useCallback(async () => {
     setErrorMessage(null);
 
+    if (isUnaryOperation(selectedOperation)) {
+      const unaryValidation = validateUnaryOperation(operandA, selectedOperation);
+      if (!unaryValidation.isValid || unaryValidation.operandA === undefined) {
+        setResult(null);
+        setErrorMessage(unaryValidation.errorMessage || 'Invalid calculator input');
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const data = await calculateSquareRoot(unaryValidation.operandA);
+        const formattedResult = formatNumberForDisplay(data.result);
+        setResult(formattedResult);
+
+        const expression = `√(${formatNumberForDisplay(unaryValidation.operandA)})`;
+        const entry: CalculationHistoryEntry = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          expression,
+          result: data.result,
+          operation: selectedOperation,
+          timestamp: new Date().toISOString(),
+        };
+        setHistory((prev) => [entry, ...prev].slice(0, MAX_HISTORY_ENTRIES));
+      } catch (error) {
+        setResult(null);
+        setErrorMessage(error instanceof Error ? error.message : 'Calculation failed');
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     const validation = validateBinaryOperation(operandA, operandB, selectedOperation);
     if (!validation.isValid || validation.operandA === undefined || validation.operandB === undefined) {
       setResult(null);
@@ -81,7 +122,7 @@ export function useCalculator() {
 
     setIsLoading(true);
     try {
-      const executor = BINARY_OPERATION_EXECUTORS[selectedOperation];
+      const executor = BINARY_OPERATION_EXECUTORS[selectedOperation as BinaryOperationType];
       const data = await executor(validation.operandA, validation.operandB);
       const formattedResult = formatNumberForDisplay(data.result);
       setResult(formattedResult);

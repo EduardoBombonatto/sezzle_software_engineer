@@ -20,6 +20,39 @@ export function parseStrictFiniteNumber(raw: string): number | null {
   return normalizeZero(parsed);
 }
 
+export function isUnaryOperation(operation: OperationType): boolean {
+  return operation === 'sqrt';
+}
+
+export function validateUnaryOperation(
+  rawOperandA: string,
+  operation: OperationType
+): ValidationResult {
+  if (rawOperandA.trim().length === 0) {
+    return { isValid: false, errorMessage: 'First operand is required' };
+  }
+
+  const operandA = parseStrictFiniteNumber(rawOperandA);
+  if (operandA === null) {
+    return {
+      isValid: false,
+      errorMessage: 'First operand must be a valid finite number within float64 bounds',
+    };
+  }
+
+  if (operation === 'sqrt' && operandA < 0) {
+    return {
+      isValid: false,
+      errorMessage: 'Cannot calculate square root of a negative number',
+    };
+  }
+
+  return {
+    isValid: true,
+    operandA,
+  };
+}
+
 export function validateBinaryOperation(
   rawOperandA: string,
   rawOperandB: string,

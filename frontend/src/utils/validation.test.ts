@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatNumberForDisplay, validateBinaryOperation } from './validation';
+import {
+  formatNumberForDisplay,
+  isUnaryOperation,
+  validateBinaryOperation,
+  validateUnaryOperation,
+} from './validation';
 
 describe('Frontend Calculator Validation (Addition)', () => {
   it('validates valid positive, negative, and decimal numbers', () => {
@@ -129,5 +134,32 @@ describe('Frontend Calculator Validation (Addition)', () => {
     const overflowRes = validateBinaryOperation('10', '1000', 'power');
     expect(overflowRes.isValid).toBe(false);
     expect(overflowRes.errorMessage).toContain('overflow');
+  });
+
+  it('validates unary square root operation and rejects negative inputs before network call', () => {
+    expect(isUnaryOperation('sqrt')).toBe(true);
+    expect(isUnaryOperation('add')).toBe(false);
+
+    const validZero = validateUnaryOperation('-0.0', 'sqrt');
+    expect(validZero.isValid).toBe(true);
+    expect(Object.is(validZero.operandA, 0)).toBe(true);
+
+    const validSquare = validateUnaryOperation('81', 'sqrt');
+    expect(validSquare).toEqual({
+      isValid: true,
+      operandA: 81,
+    });
+
+    const negativeInput = validateUnaryOperation('-16', 'sqrt');
+    expect(negativeInput).toEqual({
+      isValid: false,
+      errorMessage: 'Cannot calculate square root of a negative number',
+    });
+
+    const emptyInput = validateUnaryOperation('   ', 'sqrt');
+    expect(emptyInput).toEqual({
+      isValid: false,
+      errorMessage: 'First operand is required',
+    });
   });
 });

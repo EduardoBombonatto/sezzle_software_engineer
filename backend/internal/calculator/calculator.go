@@ -20,6 +20,9 @@ var (
 
 	// ErrNegativeBaseFractionalExponent indicates an attempt to raise a negative base to a non-integer exponent.
 	ErrNegativeBaseFractionalExponent = errors.New("negative base with fractional exponent is undefined in real numbers")
+
+	// ErrNegativeSquareRoot indicates an attempt to compute the real square root of a negative number.
+	ErrNegativeSquareRoot = errors.New("cannot calculate square root of a negative number")
 )
 
 // Calculator defines the contract for arithmetic operations.
@@ -29,6 +32,7 @@ type Calculator interface {
 	Multiply(operandA, operandB float64) (float64, error)
 	Divide(operandA, operandB float64) (float64, error)
 	Power(base, exponent float64) (float64, error)
+	Sqrt(operand float64) (float64, error)
 }
 
 // Service implements the Calculator domain logic with O(1) time and O(1) space complexity.
@@ -100,6 +104,20 @@ func (s *Service) Power(base, exponent float64) (float64, error) {
 	}
 
 	return finalizeResult(math.Pow(base, exponent))
+}
+
+// Sqrt computes the non-negative square root of a finite non-negative float64 number.
+// It fails fast before invoking math.Sqrt if the operand is negative.
+func (s *Service) Sqrt(operand float64) (float64, error) {
+	if err := validateFiniteOperands(operand); err != nil {
+		return 0, err
+	}
+
+	if operand < 0 {
+		return 0, ErrNegativeSquareRoot
+	}
+
+	return finalizeResult(math.Sqrt(operand))
 }
 
 func validateFiniteOperands(operands ...float64) error {
