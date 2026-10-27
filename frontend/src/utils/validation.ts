@@ -69,6 +69,16 @@ export function validateBinaryOperation(
     }
   }
 
+  if (operation === 'multiply') {
+    const previewProd = operandA * operandB;
+    if (!Number.isFinite(previewProd)) {
+      return {
+        isValid: false,
+        errorMessage: 'Arithmetic result overflowed maximum float64 bounds',
+      };
+    }
+  }
+
   return {
     isValid: true,
     operandA,

@@ -8,18 +8,56 @@ import (
 	"github.com/eduardobombonatto/sezzle-calculator/backend/internal/calculator"
 )
 
+type binaryTestCase struct {
+	name        string
+	operandA    float64
+	operandB    float64
+	expected    float64
+	expectedErr error
+}
+
+func runBinaryTestCases(
+	t *testing.T,
+	operation func(operandA, operandB float64) (float64, error),
+	testCases []binaryTestCase,
+) {
+	t.Helper()
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result, err := operation(tc.operandA, tc.operandB)
+
+			if tc.expectedErr != nil {
+				if !errors.Is(err, tc.expectedErr) {
+					t.Fatalf("expected error %v, got %v", tc.expectedErr, err)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+
+			if math.Abs(result-tc.expected) > 1e-12 && result != tc.expected {
+				t.Fatalf("expected %v, got %v", tc.expected, result)
+			}
+
+			if result == 0 && math.Signbit(result) {
+				t.Fatalf("expected positive zero (0.0), got negative zero (-0.0)")
+			}
+		})
+	}
+}
+
 func TestAdd(t *testing.T) {
 	t.Parallel()
 
 	svc := calculator.NewService()
 
-	testCases := []struct {
-		name        string
-		operandA    float64
-		operandB    float64
-		expected    float64
-		expectedErr error
-	}{
+	runBinaryTestCases(t, svc.Add, []binaryTestCase{
 		{
 			name:     "positive integers",
 			operandA: 12,
@@ -110,35 +148,7 @@ func TestAdd(t *testing.T) {
 			operandB:    math.Inf(-1),
 			expectedErr: calculator.ErrInvalidOperand,
 		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
-			result, err := svc.Add(tc.operandA, tc.operandB)
-
-			if tc.expectedErr != nil {
-				if !errors.Is(err, tc.expectedErr) {
-					t.Fatalf("expected error %v, got %v", tc.expectedErr, err)
-				}
-				return
-			}
-
-			if err != nil {
-				t.Fatalf("expected no error, got %v", err)
-			}
-
-			if result != tc.expected {
-				t.Fatalf("expected %v, got %v", tc.expected, result)
-			}
-
-			if result == 0 && math.Signbit(result) {
-				t.Fatalf("expected positive zero (0.0), got negative zero (-0.0)")
-			}
-		})
-	}
+	})
 }
 
 func TestSubtract(t *testing.T) {
@@ -146,13 +156,7 @@ func TestSubtract(t *testing.T) {
 
 	svc := calculator.NewService()
 
-	testCases := []struct {
-		name        string
-		operandA    float64
-		operandB    float64
-		expected    float64
-		expectedErr error
-	}{
+	runBinaryTestCases(t, svc.Subtract, []binaryTestCase{
 		{
 			name:     "positive integers",
 			operandA: 25,
@@ -231,33 +235,92 @@ func TestSubtract(t *testing.T) {
 			operandB:    5,
 			expectedErr: calculator.ErrInvalidOperand,
 		},
-	}
+	})
+}
 
-	for _, tc := range testCases {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
+func TestMultiply(t *testing.T) {
+	t.Parallel()
 
-			result, err := svc.Subtract(tc.operandA, tc.operandB)
+	svc := calculator.NewService()
 
-			if tc.expectedErr != nil {
-				if !errors.Is(err, tc.expectedErr) {
-					t.Fatalf("expected error %v, got %v", tc.expectedErr, err)
-				}
-				return
-			}
-
-			if err != nil {
-				t.Fatalf("expected no error, got %v", err)
-			}
-
-			if result != tc.expected {
-				t.Fatalf("expected %v, got %v", tc.expected, result)
-			}
-
-			if result == 0 && math.Signbit(result) {
-				t.Fatalf("expected positive zero (0.0), got negative zero (-0.0)")
-			}
-		})
-	}
+	runBinaryTestCases(t, svc.Multiply, []binaryTestCase{
+		{
+			name:     "positive integers",
+			operandA: 6,
+			operandB: 7,
+			expected: 42,
+		},
+		{
+			name:     "negative times negative yields positive",
+			operandA: -8.5,
+			operandB: -2.0,
+			expected: 17.0,
+		},
+		{
+			name:     "negative times positive yields negative",
+			operandA: -12.5,
+			operandB: 4.0,
+			expected: -50.0,
+		},
+		{
+			name:     "duplicate equal elements",
+			operandA: 15,
+			operandB: 15,
+			expected: 225,
+		},
+		{
+			name:     "both operands zero",
+			operandA: 0,
+			operandB: 0,
+			expected: 0,
+		},
+		{
+			name:     "negative number multiplied by zero normalizes -0.0 to 0.0",
+			operandA: -999999.99,
+			operandB: 0,
+			expected: 0,
+		},
+		{
+			name:     "negative MaxFloat64 multiplied by zero normalizes to 0.0",
+			operandA: -math.MaxFloat64,
+			operandB: 0,
+			expected: 0,
+		},
+		{
+			name:     "MaxFloat64 multiplied by identity 1 stays finite",
+			operandA: math.MaxFloat64,
+			operandB: 1,
+			expected: math.MaxFloat64,
+		},
+		{
+			name:        "positive float64 overflow when multiplying MaxFloat64 by 2",
+			operandA:    math.MaxFloat64,
+			operandB:    2,
+			expectedErr: calculator.ErrOverflow,
+		},
+		{
+			name:        "negative float64 overflow when multiplying MaxFloat64 by -2",
+			operandA:    math.MaxFloat64,
+			operandB:    -2,
+			expectedErr: calculator.ErrOverflow,
+		},
+		{
+			name:        "NaN first operand rejected before calculation",
+			operandA:    math.NaN(),
+			operandB:    10,
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+		{
+			name:        "NaN second operand rejected before calculation",
+			operandA:    10,
+			operandB:    math.NaN(),
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+		{
+			name:        "infinite operand rejected before calculation",
+			operandA:    math.Inf(-1),
+			operandB:    0,
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+	})
 }

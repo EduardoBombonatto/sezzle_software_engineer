@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { calculateAddition, calculateSubtraction } from './calculatorApi';
+import {
+  calculateAddition,
+  calculateMultiplication,
+  calculateSubtraction,
+} from './calculatorApi';
 import { httpClient } from './httpClient';
 
 vi.mock('./httpClient', () => ({
@@ -89,6 +93,34 @@ describe('calculatorApi - calculateAddition (Axios)', () => {
       a: 30,
       b: 12,
       result: 18,
+    });
+  });
+
+  it('sends POST request via Axios to /calculate/multiply and unwraps standardized envelope', async () => {
+    vi.mocked(httpClient.post).mockResolvedValueOnce({
+      data: {
+        erro: false,
+        message: 'Operation completed successfully',
+        data: {
+          operation: 'multiply',
+          a: 6,
+          b: 7,
+          result: 42,
+        },
+        httpcode: 200,
+        timestamp: '2026-10-26T21:00:00Z',
+      },
+    });
+
+    const response = await calculateMultiplication(6, 7);
+
+    expect(httpClient.post).toHaveBeenCalledTimes(1);
+    expect(httpClient.post).toHaveBeenCalledWith('/calculate/multiply', { a: 6, b: 7 });
+    expect(response).toEqual({
+      operation: 'multiply',
+      a: 6,
+      b: 7,
+      result: 42,
     });
   });
 });

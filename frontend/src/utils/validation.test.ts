@@ -71,4 +71,16 @@ describe('Frontend Calculator Validation (Addition)', () => {
     expect(overflowRes.isValid).toBe(false);
     expect(overflowRes.errorMessage).toContain('overflow');
   });
+
+  it('validates multiplication inputs and detects float64 multiplication overflow', () => {
+    const validRes = validateBinaryOperation('-7.5', '4', 'multiply');
+    expect(validRes.isValid).toBe(true);
+    expect(validRes.operandA).toBe(-7.5);
+    expect(validRes.operandB).toBe(4);
+
+    const maxFloat = String(Number.MAX_VALUE);
+    const overflowRes = validateBinaryOperation(maxFloat, '2', 'multiply');
+    expect(overflowRes.isValid).toBe(false);
+    expect(overflowRes.errorMessage).toContain('overflow');
+  });
 });

@@ -12,6 +12,7 @@ interface OperationOption {
 const AVAILABLE_OPERATIONS: OperationOption[] = [
   { type: 'add', label: 'Add (+)', symbol: '+' },
   { type: 'subtract', label: 'Subtract (-)', symbol: '-' },
+  { type: 'multiply', label: 'Multiply (×)', symbol: '×' },
 ];
 
 export function Calculator() {

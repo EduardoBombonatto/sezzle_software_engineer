@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { calculateAddition, calculateSubtraction } from '../api/calculatorApi';
-import type { CalculationHistoryEntry, OperationType } from '../types/calculator';
+import {
+  calculateAddition,
+  calculateMultiplication,
+  calculateSubtraction,
+} from '../api/calculatorApi';
+import type {
+  CalculationHistoryEntry,
+  CalculationResponseData,
+  OperationType,
+} from '../types/calculator';
 import { formatNumberForDisplay, validateBinaryOperation } from '../utils/validation';
 
 const MAX_HISTORY_ENTRIES = 10;
@@ -9,6 +17,16 @@ export const NOTIFICATION_DURATION_MS = 4000;
 const OPERATION_SYMBOLS: Record<OperationType, string> = {
   add: '+',
   subtract: '-',
+  multiply: '×',
+};
+
+const BINARY_OPERATION_EXECUTORS: Record<
+  OperationType,
+  (operandA: number, operandB: number) => Promise<CalculationResponseData>
+> = {
+  add: calculateAddition,
+  subtract: calculateSubtraction,
+  multiply: calculateMultiplication,
 };
 
 export function useCalculator() {
@@ -57,10 +75,8 @@ export function useCalculator() {
 
     setIsLoading(true);
     try {
-      const data =
-        selectedOperation === 'subtract'
-          ? await calculateSubtraction(validation.operandA, validation.operandB)
-          : await calculateAddition(validation.operandA, validation.operandB);
+      const executor = BINARY_OPERATION_EXECUTORS[selectedOperation];
+      const data = await executor(validation.operandA, validation.operandB);
       const formattedResult = formatNumberForDisplay(data.result);
       setResult(formattedResult);
 

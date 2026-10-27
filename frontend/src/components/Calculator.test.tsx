@@ -7,6 +7,7 @@ import { Calculator } from './Calculator';
 vi.mock('../api/calculatorApi', () => ({
   calculateAddition: vi.fn(),
   calculateSubtraction: vi.fn(),
+  calculateMultiplication: vi.fn(),
 }));
 
 describe('Calculator Component (Addition)', () => {
@@ -114,5 +115,29 @@ describe('Calculator Component (Addition)', () => {
 
     expect(await screen.findByTestId('calculation-result')).toHaveTextContent('32');
     expect(screen.getByTestId('history-list')).toHaveTextContent('50 - 18 = 32');
+  });
+
+  it('calculates multiplication via Axios API when Multiply (×) is selected', async () => {
+    const user = userEvent.setup();
+    vi.mocked(calculatorApi.calculateMultiplication).mockResolvedValueOnce({
+      operation: 'multiply',
+      a: 8,
+      b: 9,
+      result: 72,
+    });
+
+    render(<Calculator />);
+
+    await user.click(screen.getByRole('button', { name: /multiply/i }));
+    await user.type(screen.getByLabelText(/first operand/i), '8');
+    await user.type(screen.getByLabelText(/second operand/i), '9');
+    await user.click(screen.getByRole('button', { name: /^calculate$/i }));
+
+    await waitFor(() => {
+      expect(calculatorApi.calculateMultiplication).toHaveBeenCalledWith(8, 9);
+    });
+
+    expect(await screen.findByTestId('calculation-result')).toHaveTextContent('72');
+    expect(screen.getByTestId('history-list')).toHaveTextContent('8 × 9 = 72');
   });
 });

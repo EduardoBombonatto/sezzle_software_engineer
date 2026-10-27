@@ -354,3 +354,92 @@ func TestSubtractEndpoint(t *testing.T) {
 		})
 	}
 }
+
+func TestMultiplyEndpoint(t *testing.T) {
+	t.Parallel()
+
+	router := newTestServer()
+
+	testCases := []struct {
+		name              string
+		method            string
+		contentType       string
+		body              string
+		expectedStatus    int
+		expectedErrorFlag bool
+		expectedResult    float64
+		expectedMsgSubstr string
+	}{
+		{
+			name:              "valid multiplication of numbers",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{"a": 7.5, "b": 4}`,
+			expectedStatus:    http.StatusOK,
+			expectedErrorFlag: false,
+			expectedResult:    30.0,
+		},
+		{
+			name:              "multiplication of negative by zero returns normalized zero",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{"a": -150.5, "b": 0}`,
+			expectedStatus:    http.StatusOK,
+			expectedErrorFlag: false,
+			expectedResult:    0.0,
+		},
+		{
+			name:              "degenerate single operand missing b",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{"a": 7}`,
+			expectedStatus:    http.StatusBadRequest,
+			expectedErrorFlag: true,
+			expectedMsgSubstr: "Both operands 'a' and 'b' are required",
+		},
+		{
+			name:              "extreme value overflow when multiplying MaxFloat64 by 2",
+			method:            http.MethodPost,
+			contentType:       "application/json",
+			body:              `{"a": 1.7976931348623157e+308, "b": 2}`,
+			expectedStatus:    http.StatusUnprocessableEntity,
+			expectedErrorFlag: true,
+			expectedMsgSubstr: "overflow",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			req := httptest.NewRequest(tc.method, "/api/v1/calculate/multiply", bytes.NewBufferString(tc.body))
+			if tc.contentType != "" {
+				req.Header.Set("Content-Type", tc.contentType)
+			}
+			rec := httptest.NewRecorder()
+
+			router.ServeHTTP(rec, req)
+
+			env := assertStandardEnvelope(t, rec, tc.expectedStatus, tc.expectedErrorFlag)
+
+			if tc.expectedErrorFlag {
+				if !strings.Contains(strings.ToLower(env.Message), strings.ToLower(tc.expectedMsgSubstr)) {
+					t.Fatalf("expected error message containing %q, got %q", tc.expectedMsgSubstr, env.Message)
+				}
+				return
+			}
+
+			gotResult, ok := env.Data["result"].(float64)
+			if !ok {
+				t.Fatalf("expected numeric result in data, got %v", env.Data["result"])
+			}
+			if math.Abs(gotResult-tc.expectedResult) > 1e-9 {
+				t.Fatalf("expected result %v, got %v", tc.expectedResult, gotResult)
+			}
+			if env.Data["operation"] != "multiply" {
+				t.Fatalf("expected operation 'multiply', got %v", env.Data["operation"])
+			}
+		})
+	}
+}
