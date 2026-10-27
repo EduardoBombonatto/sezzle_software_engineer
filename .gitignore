@@ -9,6 +9,8 @@ backend/server
 
 # Test & coverage artifacts (local temporary)
 *.out
+coverage/
+frontend/coverage/
 .DS_Store
 
 # Environment files

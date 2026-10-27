@@ -85,6 +85,25 @@ func TestHealthEndpoint(t *testing.T) {
 	if env.Data["status"] != "healthy" {
 		t.Fatalf("expected status 'healthy', got %v", env.Data["status"])
 	}
+
+	postReq := httptest.NewRequest(http.MethodPost, "/api/v1/health", nil)
+	postRec := httptest.NewRecorder()
+	router.ServeHTTP(postRec, postReq)
+	assertStandardEnvelope(t, postRec, http.StatusMethodNotAllowed, true)
+
+	optReq := httptest.NewRequest(http.MethodOptions, "/api/v1/calculate/add", nil)
+	optRec := httptest.NewRecorder()
+	router.ServeHTTP(optRec, optReq)
+	if optRec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204 No Content for OPTIONS preflight, got %d", optRec.Code)
+	}
+
+	oversizedBody := `{"a": 1, "b": ` + strings.Repeat("9", 5000) + `}`
+	largeReq := httptest.NewRequest(http.MethodPost, "/api/v1/calculate/add", bytes.NewBufferString(oversizedBody))
+	largeReq.Header.Set("Content-Type", "application/json")
+	largeRec := httptest.NewRecorder()
+	router.ServeHTTP(largeRec, largeReq)
+	assertStandardEnvelope(t, largeRec, http.StatusRequestEntityTooLarge, true)
 }
 
 func TestAddEndpoint(t *testing.T) {
