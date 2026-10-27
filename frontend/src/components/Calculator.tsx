@@ -14,6 +14,7 @@ const AVAILABLE_OPERATIONS: OperationOption[] = [
   { type: 'subtract', label: 'Subtract (-)', symbol: '-' },
   { type: 'multiply', label: 'Multiply (×)', symbol: '×' },
   { type: 'divide', label: 'Divide (÷)', symbol: '÷' },
+  { type: 'power', label: 'Power (xʸ)', symbol: '^' },
 ];
 
 export function Calculator() {

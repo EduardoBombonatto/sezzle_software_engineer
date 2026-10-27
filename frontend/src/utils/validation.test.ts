@@ -107,4 +107,27 @@ describe('Frontend Calculator Validation (Addition)', () => {
     expect(overflowRes.isValid).toBe(false);
     expect(overflowRes.errorMessage).toContain('overflow');
   });
+
+  it('validates exponentiation inputs and blocks invalid domains before network call', () => {
+    const validRes = validateBinaryOperation('2', '10', 'power');
+    expect(validRes.isValid).toBe(true);
+    expect(validRes.operandA).toBe(2);
+    expect(validRes.operandB).toBe(10);
+
+    const zeroNeg = validateBinaryOperation('0', '-2', 'power');
+    expect(zeroNeg).toEqual({
+      isValid: false,
+      errorMessage: 'Zero cannot be raised to a negative exponent',
+    });
+
+    const negBaseFrac = validateBinaryOperation('-9', '0.5', 'power');
+    expect(negBaseFrac).toEqual({
+      isValid: false,
+      errorMessage: 'Negative base with fractional exponent is undefined in real numbers',
+    });
+
+    const overflowRes = validateBinaryOperation('10', '1000', 'power');
+    expect(overflowRes.isValid).toBe(false);
+    expect(overflowRes.errorMessage).toContain('overflow');
+  });
 });

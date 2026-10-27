@@ -429,3 +429,114 @@ func TestDivide(t *testing.T) {
 		},
 	})
 }
+
+func TestPower(t *testing.T) {
+	t.Parallel()
+
+	svc := calculator.NewService()
+
+	runBinaryTestCases(t, svc.Power, []binaryTestCase{
+		{
+			name:     "positive base and positive integer exponent",
+			operandA: 2,
+			operandB: 10,
+			expected: 1024,
+		},
+		{
+			name:     "duplicate equal elements",
+			operandA: 3,
+			operandB: 3,
+			expected: 27,
+		},
+		{
+			name:     "negative base with even integer exponent yields positive",
+			operandA: -3,
+			operandB: 4,
+			expected: 81,
+		},
+		{
+			name:     "negative base with odd integer exponent yields negative",
+			operandA: -2,
+			operandB: 3,
+			expected: -8,
+		},
+		{
+			name:     "positive base with fractional exponent",
+			operandA: 9,
+			operandB: 0.5,
+			expected: 3,
+		},
+		{
+			name:     "positive base with negative exponent",
+			operandA: 2,
+			operandB: -3,
+			expected: 0.125,
+		},
+		{
+			name:     "any number including zero raised to zero yields 1",
+			operandA: 0,
+			operandB: 0,
+			expected: 1,
+		},
+		{
+			name:     "MaxFloat64 raised to zero yields 1",
+			operandA: math.MaxFloat64,
+			operandB: 0,
+			expected: 1,
+		},
+		{
+			name:     "negative zero raised to odd positive integer normalizes -0.0 to 0.0",
+			operandA: math.Copysign(0, -1),
+			operandB: 3,
+			expected: 0,
+		},
+		{
+			name:        "zero raised to negative exponent rejected before calculation",
+			operandA:    0,
+			operandB:    -2,
+			expectedErr: calculator.ErrZeroToNegativePower,
+		},
+		{
+			name:        "negative zero raised to negative exponent rejected before calculation",
+			operandA:    math.Copysign(0, -1),
+			operandB:    -1,
+			expectedErr: calculator.ErrZeroToNegativePower,
+		},
+		{
+			name:        "negative base with fractional exponent rejected before calculation",
+			operandA:    -4,
+			operandB:    0.5,
+			expectedErr: calculator.ErrNegativeBaseFractionalExponent,
+		},
+		{
+			name:        "extreme exponentiation overflows float64",
+			operandA:    math.MaxFloat64,
+			operandB:    2,
+			expectedErr: calculator.ErrOverflow,
+		},
+		{
+			name:        "negative base with huge odd exponent overflows float64",
+			operandA:    -10,
+			operandB:    1001,
+			expectedErr: calculator.ErrOverflow,
+		},
+		{
+			name:        "NaN first operand rejected before calculation",
+			operandA:    math.NaN(),
+			operandB:    2,
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+		{
+			name:        "NaN second operand rejected before calculation",
+			operandA:    2,
+			operandB:    math.NaN(),
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+		{
+			name:        "infinite operand rejected before calculation",
+			operandA:    2,
+			operandB:    math.Inf(1),
+			expectedErr: calculator.ErrInvalidOperand,
+		},
+	})
+}

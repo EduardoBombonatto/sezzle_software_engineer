@@ -1,4 +1,4 @@
-export type OperationType = 'add' | 'subtract' | 'multiply' | 'divide';
+export type OperationType = 'add' | 'subtract' | 'multiply' | 'divide' | 'power';
 
 export interface ApiEnvelope<T> {
   erro: boolean;

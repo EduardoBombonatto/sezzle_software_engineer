@@ -9,6 +9,7 @@ vi.mock('../api/calculatorApi', () => ({
   calculateSubtraction: vi.fn(),
   calculateMultiplication: vi.fn(),
   calculateDivision: vi.fn(),
+  calculatePower: vi.fn(),
 }));
 
 describe('Calculator Component (Addition)', () => {
@@ -172,5 +173,42 @@ describe('Calculator Component (Addition)', () => {
 
     expect(await screen.findByTestId('calculation-result')).toHaveTextContent('7.5');
     expect(screen.getByTestId('history-list')).toHaveTextContent('45 ÷ 6 = 7.5');
+  });
+
+  it('calculates exponentiation via Axios API and blocks invalid domain before network call', async () => {
+    const user = userEvent.setup();
+    vi.mocked(calculatorApi.calculatePower).mockResolvedValueOnce({
+      operation: 'power',
+      a: 2,
+      b: 8,
+      result: 256,
+    });
+
+    render(<Calculator />);
+
+    await user.click(screen.getByRole('button', { name: /power/i }));
+    await user.type(screen.getByLabelText(/first operand/i), '0');
+    await user.type(screen.getByLabelText(/second operand/i), '-2');
+    await user.click(screen.getByRole('button', { name: /^calculate$/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      /zero cannot be raised to a negative exponent/i
+    );
+    expect(calculatorApi.calculatePower).not.toHaveBeenCalled();
+
+    const inputA = screen.getByLabelText(/first operand/i);
+    const inputB = screen.getByLabelText(/second operand/i);
+    await user.clear(inputA);
+    await user.type(inputA, '2');
+    await user.clear(inputB);
+    await user.type(inputB, '8');
+    await user.click(screen.getByRole('button', { name: /^calculate$/i }));
+
+    await waitFor(() => {
+      expect(calculatorApi.calculatePower).toHaveBeenCalledWith(2, 8);
+    });
+
+    expect(await screen.findByTestId('calculation-result')).toHaveTextContent('256');
+    expect(screen.getByTestId('history-list')).toHaveTextContent('2 ^ 8 = 256');
   });
 });

@@ -3,6 +3,7 @@ import {
   calculateAddition,
   calculateDivision,
   calculateMultiplication,
+  calculatePower,
   calculateSubtraction,
 } from './calculatorApi';
 import { httpClient } from './httpClient';
@@ -153,6 +154,42 @@ describe('calculatorApi - calculateAddition (Axios)', () => {
       a: 45,
       b: 6,
       result: 7.5,
+    });
+  });
+
+  it('sends POST request via Axios to /calculate/power and blocks invalid domains before network call', async () => {
+    await expect(calculatePower(0, -1)).rejects.toThrow(
+      'Zero cannot be raised to a negative exponent'
+    );
+    await expect(calculatePower(-4, 0.5)).rejects.toThrow(
+      'Negative base with fractional exponent is undefined in real numbers'
+    );
+    expect(httpClient.post).not.toHaveBeenCalled();
+
+    vi.mocked(httpClient.post).mockResolvedValueOnce({
+      data: {
+        erro: false,
+        message: 'Operation completed successfully',
+        data: {
+          operation: 'power',
+          a: 2,
+          b: 8,
+          result: 256,
+        },
+        httpcode: 200,
+        timestamp: '2026-10-26T21:00:00Z',
+      },
+    });
+
+    const response = await calculatePower(2, 8);
+
+    expect(httpClient.post).toHaveBeenCalledTimes(1);
+    expect(httpClient.post).toHaveBeenCalledWith('/calculate/power', { a: 2, b: 8 });
+    expect(response).toEqual({
+      operation: 'power',
+      a: 2,
+      b: 8,
+      result: 256,
     });
   });
 });

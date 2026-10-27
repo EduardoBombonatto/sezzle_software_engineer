@@ -3,6 +3,7 @@ import {
   calculateAddition,
   calculateDivision,
   calculateMultiplication,
+  calculatePower,
   calculateSubtraction,
 } from '../api/calculatorApi';
 import type {
@@ -20,6 +21,7 @@ const OPERATION_SYMBOLS: Record<OperationType, string> = {
   subtract: '-',
   multiply: '×',
   divide: '÷',
+  power: '^',
 };
 
 const BINARY_OPERATION_EXECUTORS: Record<
@@ -30,6 +32,7 @@ const BINARY_OPERATION_EXECUTORS: Record<
   subtract: calculateSubtraction,
   multiply: calculateMultiplication,
   divide: calculateDivision,
+  power: calculatePower,
 };
 
 export function useCalculator() {

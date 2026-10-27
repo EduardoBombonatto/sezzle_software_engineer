@@ -12,6 +12,7 @@ const (
 	OperationSubtract = "subtract"
 	OperationMultiply = "multiply"
 	OperationDivide   = "divide"
+	OperationPower    = "power"
 )
 
 // Handler manages HTTP endpoints for the calculator microservice.
@@ -35,6 +36,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	mux.HandleFunc("/api/v1/calculate/subtract", h.handleBinaryOperation(OperationSubtract, h.calculator.Subtract))
 	mux.HandleFunc("/api/v1/calculate/multiply", h.handleBinaryOperation(OperationMultiply, h.calculator.Multiply))
 	mux.HandleFunc("/api/v1/calculate/divide", h.handleBinaryOperation(OperationDivide, h.calculator.Divide))
+	mux.HandleFunc("/api/v1/calculate/power", h.handleBinaryOperation(OperationPower, h.calculator.Power))
 
 	return withMiddleware(mux)
 }
@@ -82,6 +84,8 @@ func mapDomainError(err error) (int, string) {
 	case errors.Is(err, calculator.ErrInvalidOperand):
 		return http.StatusBadRequest, err.Error()
 	case errors.Is(err, calculator.ErrDivisionByZero),
+		errors.Is(err, calculator.ErrZeroToNegativePower),
+		errors.Is(err, calculator.ErrNegativeBaseFractionalExponent),
 		errors.Is(err, calculator.ErrOverflow):
 		return http.StatusUnprocessableEntity, err.Error()
 	default:

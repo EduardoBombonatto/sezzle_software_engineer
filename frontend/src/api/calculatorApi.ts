@@ -99,3 +99,20 @@ export async function calculateDivision(
     b: normalizeZero(operandB),
   });
 }
+
+export async function calculatePower(
+  base: number,
+  exponent: number
+): Promise<CalculationResponseData> {
+  assertFiniteNumbers(base, exponent);
+  if (base === 0 && exponent < 0) {
+    throw new Error('Zero cannot be raised to a negative exponent');
+  }
+  if (base < 0 && !Number.isInteger(exponent)) {
+    throw new Error('Negative base with fractional exponent is undefined in real numbers');
+  }
+  return postCalculation('/calculate/power', {
+    a: normalizeZero(base),
+    b: normalizeZero(exponent),
+  });
+}

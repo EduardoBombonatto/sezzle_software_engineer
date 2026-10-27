@@ -14,6 +14,12 @@ var (
 
 	// ErrDivisionByZero indicates an attempt to divide a number by zero.
 	ErrDivisionByZero = errors.New("division by zero is not allowed")
+
+	// ErrZeroToNegativePower indicates an attempt to raise zero to a negative exponent.
+	ErrZeroToNegativePower = errors.New("zero cannot be raised to a negative exponent")
+
+	// ErrNegativeBaseFractionalExponent indicates an attempt to raise a negative base to a non-integer exponent.
+	ErrNegativeBaseFractionalExponent = errors.New("negative base with fractional exponent is undefined in real numbers")
 )
 
 // Calculator defines the contract for arithmetic operations.
@@ -22,6 +28,7 @@ type Calculator interface {
 	Subtract(operandA, operandB float64) (float64, error)
 	Multiply(operandA, operandB float64) (float64, error)
 	Divide(operandA, operandB float64) (float64, error)
+	Power(base, exponent float64) (float64, error)
 }
 
 // Service implements the Calculator domain logic with O(1) time and O(1) space complexity.
@@ -74,6 +81,25 @@ func (s *Service) Divide(operandA, operandB float64) (float64, error) {
 	}
 
 	return finalizeResult(operandA / operandB)
+}
+
+// Power computes base raised to exponent (base^exponent).
+// It validates domain preconditions (zero to negative power and negative base with fractional exponent)
+// before invoking math.Pow.
+func (s *Service) Power(base, exponent float64) (float64, error) {
+	if err := validateFiniteOperands(base, exponent); err != nil {
+		return 0, err
+	}
+
+	if base == 0 && exponent < 0 {
+		return 0, ErrZeroToNegativePower
+	}
+
+	if base < 0 && math.Trunc(exponent) != exponent {
+		return 0, ErrNegativeBaseFractionalExponent
+	}
+
+	return finalizeResult(math.Pow(base, exponent))
 }
 
 func validateFiniteOperands(operands ...float64) error {

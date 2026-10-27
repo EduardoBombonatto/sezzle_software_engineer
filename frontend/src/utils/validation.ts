@@ -95,6 +95,28 @@ export function validateBinaryOperation(
     }
   }
 
+  if (operation === 'power') {
+    if (operandA === 0 && operandB < 0) {
+      return {
+        isValid: false,
+        errorMessage: 'Zero cannot be raised to a negative exponent',
+      };
+    }
+    if (operandA < 0 && !Number.isInteger(operandB)) {
+      return {
+        isValid: false,
+        errorMessage: 'Negative base with fractional exponent is undefined in real numbers',
+      };
+    }
+    const previewPow = Math.pow(operandA, operandB);
+    if (!Number.isFinite(previewPow)) {
+      return {
+        isValid: false,
+        errorMessage: 'Arithmetic result overflowed maximum float64 bounds',
+      };
+    }
+  }
+
   return {
     isValid: true,
     operandA,
