@@ -27,6 +27,10 @@ describe('Calculator Component (Addition)', () => {
     render(<Calculator />);
 
     expect(screen.getByRole('heading', { name: /sezzle calculator/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /openapi docs/i })).toHaveAttribute(
+      'href',
+      '/api/v1/docs'
+    );
     expect(screen.getByLabelText(/first operand/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/second operand/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();

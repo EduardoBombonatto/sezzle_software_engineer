@@ -34,6 +34,8 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/api/v1/health", h.handleHealth)
+	mux.HandleFunc("/api/v1/openapi.json", h.handleOpenAPISpec)
+	mux.HandleFunc("/api/v1/docs", h.handleOpenAPIDocs)
 	mux.HandleFunc("/api/v1/calculate/add", h.handleBinaryOperation(OperationAdd, h.calculator.Add))
 	mux.HandleFunc("/api/v1/calculate/subtract", h.handleBinaryOperation(OperationSubtract, h.calculator.Subtract))
 	mux.HandleFunc("/api/v1/calculate/multiply", h.handleBinaryOperation(OperationMultiply, h.calculator.Multiply))

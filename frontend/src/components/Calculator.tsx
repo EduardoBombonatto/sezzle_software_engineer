@@ -63,7 +63,17 @@ export function Calculator() {
       <main className="calculator-layout">
         <section className="calculator-card" aria-label="Calculator">
           <header className="calculator-header">
-            <h1>Sezzle Calculator</h1>
+            <div className="header-top-row">
+              <h1>Sezzle Calculator</h1>
+              <a
+                href="/api/v1/docs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="docs-link"
+              >
+                OpenAPI Docs ↗
+              </a>
+            </div>
             <p className="subtitle">Full-Stack Arithmetic Microservice Client</p>
           </header>
 

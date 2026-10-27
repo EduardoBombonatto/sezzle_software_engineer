@@ -133,6 +133,28 @@ body {
   font-weight: 700;
 }
 
+.header-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.docs-link {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  text-decoration: none;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  background: var(--display-bg);
+}
+
+.docs-link:hover {
+  border-color: var(--accent-primary);
+}
+
 .subtitle {
   margin: 0.35rem 0 1.25rem;
   color: var(--text-secondary);
